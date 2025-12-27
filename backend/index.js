@@ -29,7 +29,7 @@ app.post("/todo", async (req, res) => {
 });
 
 app.get("/todos", async(req, res) => {
-    const todos = await todo.find({});
+    const todos = await todo.find();
     if(!todos){
         return res.status(400).json({
             success: false,
@@ -43,16 +43,30 @@ app.get("/todos", async(req, res) => {
     })
 });
 
-app.put("/completed", (req, res) => {
+app.put("/completed", async(req, res) => {
   const parsed = updateTodo.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
-      success: "false",
+      success: false,
       msg: "invalid input schema!",
     });
   }
 
   const data = parsed.data;
+  const Todo = await todo.findById(data.id)
+  if(!Todo){
+    return res.status(400).json({
+        success: false,
+        msg: "todo not found!"
+    })
+  }
 
-  //add in mongo
+  Todo.completed = true;
+
+  await Todo.save();
+
+  res.status(201).json({
+    success: true,
+    msg: "Todo marked as completed!"
+  })
 });
